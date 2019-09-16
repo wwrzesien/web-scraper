@@ -13,14 +13,22 @@ class Scraper:
         self.website_page = website_page
         self.headers = headers
 
-        source = requests.get(website_page, headers=headers).text
-        self.soup = BeautifulSoup(source, 'html.parser')
-
     def get_record_player_data(self):
-        """Receive record players data from website
-        and save to list od dictonaries."""
+        """Receive record players data from to website
+        and save it as a list of dictonaries."""
+        player_data = {
+            'Nazwa': '',
+            'Typ_napędu': '',
+            'Typ_ramienia': '',
+            'Regulacja_obrotów': '',
+            'Sterowanie': '',
+            'USB': '',
+            'Cena': ''
+        }
         self.record_players_data = []
-        player_data = {}
+
+        source = requests.get(self.website_page, headers=self.headers).text
+        self.soup = BeautifulSoup(source, 'html.parser')
 
         # Get all cantainers data.
         self.house_containers = self.soup.find_all(
@@ -30,7 +38,8 @@ class Scraper:
             # Get container name.
             name = container.find_all('p', class_='m-productsBox_name')
 
-            player_data['Name'] = name[0].get_text().strip()
+            player_data['Nazwa'] = name[0].get_text(
+            ).strip().replace('Gramofon ', '')
 
             # Get features.
             house_features = container.find_all(
@@ -41,8 +50,8 @@ class Scraper:
                 feature_raw = feature.get_text().strip().replace('\n', '')
                 key, value = self.get_feature_from_line(
                     words=feature_raw.split())
-
-                player_data[key] = value
+                if key in player_data.keys():
+                    player_data[key] = value
 
             # Get price.
             house_prices = container.find_all(
@@ -54,17 +63,18 @@ class Scraper:
                 if price_raw['class'][1][-1].isdigit():
                     price_list.append(price_raw['class'][1][-1])
 
-            player_data['Price'] = ''.join(price_list)
+            player_data['Cena'] = ''.join(price_list)
 
             # Append record player data to database.
-            self.record_players_data.append(player_data)
+            self.record_players_data.append(dict(player_data))
 
     def get_feature_from_line(self, words):
         """Extract features from line."""
         for idx, word in enumerate(words):
             if ':' in word:
                 colon_pos = idx
-        key = ' '.join(words[:colon_pos+1])
+        key = ' '.join(words[:colon_pos+1]).replace(':', '')
+        key = key.replace(' ', '_')
         value = ' '.join(words[colon_pos+1:])
         return key, value
 
