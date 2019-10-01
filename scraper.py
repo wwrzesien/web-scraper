@@ -36,10 +36,14 @@ class Scraper:
 
         for container in self.house_containers:
             # Get container name.
-            name = container.find_all('p', class_='m-productsBox_name')
+            house_name = container.find_all('p', class_='m-productsBox_name')
 
-            player_data['Nazwa'] = name[0].get_text(
-            ).strip().replace('Gramofon ', '')
+            words = house_name[0].get_text().split()
+            name = self.get_record_player_name(words)
+            if name == '':
+                continue
+            else:
+                player_data['Nazwa'] = name
 
             # Get features.
             house_features = container.find_all(
@@ -69,7 +73,7 @@ class Scraper:
             self.record_players_data.append(dict(player_data))
 
     def get_feature_from_line(self, words):
-        """Extract features from line."""
+        """Extract features from list of words."""
         for idx, word in enumerate(words):
             if ':' in word:
                 colon_pos = idx
@@ -77,6 +81,16 @@ class Scraper:
         key = key.replace(' ', '_')
         value = ' '.join(words[colon_pos+1:])
         return key, value
+
+    def get_record_player_name(self, words):
+        """Extract reord players' name from list of words."""
+        sign_pos = len(words)
+        for idx, word in enumerate(words):
+            if '+' in word:
+                sign_pos = idx
+        words.remove('Gramofon')
+        name = ' '.join(words[:sign_pos-1])
+        return name
 
 
 """

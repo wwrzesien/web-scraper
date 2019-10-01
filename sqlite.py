@@ -10,12 +10,11 @@ filename = 'record_database.db'
 
 # ':memory:' -> for testing
 try:
-    conn = sqlite3.connect(filename)
+    conn = sqlite3.connect(':memory:')
 except sqlite3.Error:
     logger.debug('Connection to database failed.')
 c = conn.cursor()
 
-"""Create a new table."""
 c.execute("""CREATE TABLE record_players (
             nazwa text,
             typ_napedu text,
@@ -26,7 +25,6 @@ c.execute("""CREATE TABLE record_players (
             cena real
 )""")
 logger.info('Table has been created.')
-
 
 conn.commit()
 
@@ -41,4 +39,6 @@ def insert_record_player(data):
 
 def download_data():
     """Download data from database."""
-    pass
+    with conn:
+        c.execute("""SELECT nazwa, cena FROM record_players""")
+    return c.fetchall()

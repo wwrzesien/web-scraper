@@ -1,13 +1,15 @@
 import logging
 from scraper import Scraper
 import sqlite as sq
+import plot as pl
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
-website_page = 'https://mediamarkt.pl/rtv-i-telewizory/hifi-audio/gramofony'
+website_page = '''https://mediamarkt.pl/rtv-i-telewizory/hifi-audio/gramofony?
+sort=0&limit=100&page=1'''
 headers = {'User_Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0)' +
            'Gecko/20100101 Firefox/68.0'}
 
@@ -20,11 +22,12 @@ def main():
 
     # Save data to database.
     data = scraper.record_players_data
-    print(data)
     for row in data:
-        # print(row)
         sq.insert_record_player(row)
-    # print(data[0])
+
+    # Draw plot.
+    pl.draw()
+
     # Close database.
     sq.conn.close()
 
